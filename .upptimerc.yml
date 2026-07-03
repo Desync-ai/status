@@ -1,31 +1,76 @@
-# Change these first
-owner: upptime # Your GitHub organization or username, where this repository lives
-repo: upptime # The name of this repository
+# Upptime configuration for Desync AI status page.
+#
+# This file lives in the monorepo for source-of-truth purposes.
+# It must be copied (or symlinked) into the dedicated Desync-ai/status repo
+# before GitHub Actions can run it. See README.md for the exact steps.
+#
+# Upptime docs: https://upptime.js.org/docs/configuration
 
-sites:
-  - name: Google
-    url: https://www.google.com
-  - name: Wikipedia
-    url: https://en.wikipedia.org
-  - name: Hacker News
-    url: https://news.ycombinator.com
-  - name: Test Broken Site
-    url: https://thissitedoesnotexist.koj.co
+owner: Desync-ai
+repo: status
 
+# Incidents (outage issues) and status-page comments are assigned to Stefan.
+assignees:
+  - sviatil0
+
+# Status-page branding.
 status-website:
-  # Add your custom domain name, or remove the `cname` line if you don't have a domain
-  # Uncomment the `baseUrl` line if you don't have a custom domain and add your repo name there
-  cname: demo.upptime.js.org
-  # baseUrl: /your-repo-name
-  logoUrl: https://raw.githubusercontent.com/upptime/upptime.js.org/master/static/img/icon.svg
-  name: Upptime
-  introTitle: "**Upptime** is the open-source uptime monitor and status page, powered entirely by GitHub."
-  introMessage: This is a sample status page which uses **real-time** data from our [GitHub repository](https://github.com/upptime/upptime). No server required — just GitHub Actions, Issues, and Pages. [**Get your own for free**](https://github.com/upptime/upptime)
-  navbar:
-    - title: Status
-      href: /
-    - title: GitHub
-      href: https://github.com/$OWNER/$REPO
+  name: Desync Status
+  description: Real-time uptime for Desync AI services
+  theme: light
+  # logoUrl: https://desync.ai/favicon.svg  # TODO(stefan): add once asset URL is stable
+  # baseUrl will be https://status.desync.ai once a custom domain is configured on Pages.
 
-# Upptime also supports notifications, assigning issues, and more
-# See https://upptime.js.org/docs/configuration
+# Services to monitor. Upptime sends an HTTP GET every 5 minutes (default)
+# and opens a GitHub Issue if the response is not 2xx within 30s.
+sites:
+  # --------------------------------------------------------------------------
+  # Webapp — DigitalOcean App Platform (production)
+  # --------------------------------------------------------------------------
+  - name: Webapp (prod)
+    url: https://beta.desync.ai
+    # The frontend is a static Leptos/WASM bundle; no dedicated /health route.
+    # Root returns 200 when the CDN and origin are healthy.
+
+  - name: Webapp Backend API (prod)
+    url: https://api.desync.ai/api/healthz
+    # Public liveness route (no auth) shipped in #377 —
+    # apps/webapp-backend/blueprints/health.py. Returns 200 {"status":"ok"}.
+
+  # --------------------------------------------------------------------------
+  # Webapp — preview / dev environment
+  # --------------------------------------------------------------------------
+  - name: Webapp (dev preview)
+    url: https://beta-developer-leptos.desync.ai
+    # Leptos frontend on DigitalOcean, deployed from dev branch.
+
+  # --------------------------------------------------------------------------
+  # CRM — Gabriel (Axum, Koyeb)
+  # --------------------------------------------------------------------------
+  - name: CRM (Gabriel)
+    url: https://crm.desync.ai/health
+    # Axum /health route confirmed in apps/crm/backend/src/main.rs.
+    # Returns 200 "ok" with no auth requirement.
+
+  # --------------------------------------------------------------------------
+  # Catholic OS API — FastAPI (Koyeb)
+  # --------------------------------------------------------------------------
+  - name: Catholic OS API
+    url: https://catholic-os-api-desync-16df636c.koyeb.app/health
+    # FastAPI /health route confirmed in pipeline/catholic-os/src/aggregator/api/routers/health.py.
+    # No auth required (open liveness probe).
+    # TODO(stefan): confirm this Koyeb URL is still the canonical prod URL, or
+    # add a stable custom domain (e.g. https://catholic-os.desync.ai/health).
+
+  - name: Catholic OS Frontend
+    url: https://catholic-os-frontend-desync-e5667b79.koyeb.app
+    # Next.js 16 frontend. Root returns 200 when healthy.
+    # TODO(stefan): confirm URL or replace with custom domain once assigned.
+
+  # --------------------------------------------------------------------------
+  # MCP Server
+  # --------------------------------------------------------------------------
+  - name: MCP Server
+    url: https://mcp.desync.ai
+    # Remote MCP server used by Claude Code and external integrations.
+    # TODO(stefan): if there is a /health or /ping endpoint, prefer it here.
